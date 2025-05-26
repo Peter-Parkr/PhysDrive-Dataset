@@ -1,9 +1,8 @@
 # Millimeter-Wave Data Preprocessing
 
-This repository contains tools for preprocessing millimeter-wave data. It includes two main steps: running `main.py`, followed by `process_csv.py`.
+This project is designed to process millimeter-wave data, focusing on data preprocessing (such as data segmentation and normalization) as well as the alignment of physiological data. The project includes the following key steps and scripts:
 
-## Steps to Preprocess the Data
+## Processing Workflow
 
-1.main.py
-
-2.process_csv.py
+1. **`main.py`**: Preprocesses millimeter-wave data, including data segmentation and normalization.
+2. **`process_csv.py`**: Aligns physiological data with millimeter-wave data.
