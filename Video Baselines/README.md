@@ -4,6 +4,6 @@ After preparing the dataset in as same way as [rPPG-Toolbox](https://github.com/
 3. sup_video_intra_train_baseline.py: Train the supervised deep-learning methods.
 4. unsup_video_intra_train_baseline.py: Train the unsupervised deep-learning methods.
 
-Please note that, since different methods have varied input sizes, you need to refer to their source papers and change the MyDataset.py or MyLoss.py.
+Please note that, since different methods have varied input sizes, you need to refer to their source papers and change the MyDataset.py, utils.py, or MyLoss.py.
 
 Or, you can use this dataset by [rPPG-Toolbox](https://github.com/ubicomplab/rPPG-Toolbox).
