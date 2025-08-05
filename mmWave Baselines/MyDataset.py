@@ -56,7 +56,7 @@ class Data_DG(Dataset):
             ecg = (ecg - np.min(ecg)) / (np.max(ecg) - np.min(ecg))
             ecg = ecg.astype('float32')
 
-            peaks = nk.ecg_findpeaks(ecg, sampling_rate=20, method='rodrigues2021')['ECG_R_Peaks']
+            peaks = nk.ecg_findpeaks(ecg, sampling_rate=20, method='neurokit')['ECG_R_Peaks']
             peaks -= 1
             rr_intervals = np.diff(peaks) / 20 * 1000  # 将间隔转换为毫秒
             nn_intervals = rr_intervals
@@ -222,4 +222,5 @@ def getIndex(root_path, filesList, save_path, wave_file, Step, frames_num):
         wave_path = os.path.join(now, wave_file)
         temp = scio.loadmat(wave_path)['mmwave']
         Num = temp.shape[0]
+
 
