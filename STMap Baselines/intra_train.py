@@ -7,7 +7,7 @@ import MyDataset
 import MyLoss
 import Model
 import Baseline
-import PhysMLE
+import Intra_Model.PhysMLE
 from Intra_Model import BVPNet
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
     Source_domain_Names = TARGET_DOMAIN[args.tgt]
-    root_file = r'/home/jywang/Data/'
+    root_file = r'F:/autodl-tmp/'
     frames_num = args.frames_num
     # 参数
 
@@ -76,7 +76,8 @@ if __name__ == '__main__':
 
     if args.reData == 1:
         Target_index = os.listdir(Target_fileRoot)
-
+        print(Target_fileRoot)
+        print(Target_saveRoot)
         Target_Indexa = MyDataset.getIndex(Target_fileRoot, Target_index, \
                                            Target_saveRoot, Target_map, 10, frames_num)
 
@@ -121,30 +122,40 @@ if __name__ == '__main__':
     max_g = []
     spaces = []
     GPU = '10'
-    for gpu in range(8):
-        handle = pynvml.nvmlDeviceGetHandleByIndex(gpu)
-        meminfo = pynvml.nvmlDeviceGetMemoryInfo(handle)
-        free_Gpu = meminfo.free / 1024 / 1024 / 1024
-        if free_Gpu > 20:
-            flag = 1
-            GPU = str(gpu)
-            print("GPU:", GPU)
-            print("free_Gpu:", free_Gpu)
-            max_g = GPU
-            break
-        print("GPU:", gpu)
-        print("free_Gpu:", free_Gpu)
+    try:
+        device_count = pynvml.nvmlDeviceGetCount()
+    except Exception:
+        device_count = 0
 
-    # if free_Gpu < 40:
-    # GPU = max_g.index(max(max_g))
-    # batch_size = 10#int(150 / (47 / max_g[GPU] / 2))
-    # GPU = str(GPU)
+    if device_count == 0:
+        print("No NVIDIA GPU detected via NVML. Will use CPU or --GPU argument if provided.")
+    else:
+        for gpu in range(device_count):
+            try:
+                handle = pynvml.nvmlDeviceGetHandleByIndex(gpu)
+                meminfo = pynvml.nvmlDeviceGetMemoryInfo(handle)
+                free_Gpu = meminfo.free / 1024 / 1024 / 1024
+                print("GPU:", gpu, " free_Gpu:", free_Gpu)
+                if free_Gpu > 20:
+                    flag = 1
+                    GPU = str(gpu)
+                    max_g = GPU
+                    break
+            except Exception as e:
+                # 跳过无效的索引/不可访问的 GPU
+                print(f"Skipping GPU index {gpu}: {e}")
+                continue
+
+    # 如果脚本未找到空闲 GPU，则使用命令行参数或默认 GPU 号
     if args.GPU != 10 and GPU == '10':
         GPU = str(args.GPU)
-    if torch.cuda.is_available():
-        device = torch.device('cuda:' + GPU if torch.cuda.is_available() else 'cpu')  #
+
+    if torch.cuda.is_available() and device_count > 0:
+        # 若 CUDA 可用且 NVML 探测到 GPU，则使用选择的 GPU
+        device = torch.device('cuda:' + GPU)
         print('on GPU ', GPU)
     else:
+        device = torch.device('cpu')
         print('on CPU')
 
     source_db_0 = MyDataset.Data_DG(root_dir=Target_saveRoot, dataName=Target_name, \

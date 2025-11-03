@@ -208,7 +208,7 @@ def get_args():
                         help='the height of img')
     parser.add_argument('-n', '--frames_num', dest='frames_num', type=int, default=128,
                         help='the num of frames')
-    parser.add_argument('-t', '--tgt', dest='tgt', type=str, default='On-Road-rPPG',
+    parser.add_argument('-t', '--tgt', dest='tgt', type=str, default='PhysDrive',
                         help='the name of target domain: PURE, UBFC, V4V, UBFC...')
     parser.add_argument('-fd', '--fd', dest='fgt', type=str, default='None',
                         help='the name of target domain: PURE, UBFC, V4V, UBFC...')

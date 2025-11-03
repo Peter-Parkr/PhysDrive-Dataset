@@ -58,7 +58,7 @@ if __name__ == '__main__':
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
     Source_domain_Names = TARGET_DOMAIN[args.tgt]
-    root_file = r'xxxx' #your data address
+    root_file = r'F:/autodl-tmp/' #your data address
     # 参数
 
     # 图片参数
@@ -117,30 +117,41 @@ if __name__ == '__main__':
     max_g = []
     spaces = []
     GPU = '10'
-    for gpu in range(8):
-        handle = pynvml.nvmlDeviceGetHandleByIndex(gpu)
-        meminfo = pynvml.nvmlDeviceGetMemoryInfo(handle)
-        free_Gpu = meminfo.free / 1024 / 1024 / 1024
-        if free_Gpu > 20:
-            flag = 1
-            GPU = str(gpu)
-            print("GPU:", GPU)
-            print("free_Gpu:", free_Gpu)
-            max_g = GPU
-            break
-        print("GPU:", gpu)
-        print("free_Gpu:", free_Gpu)
 
-    # if free_Gpu < 40:
-    # GPU = max_g.index(max(max_g))
-    # batch_size = 10#int(150 / (47 / max_g[GPU] / 2))
-    # GPU = str(GPU)
+    try:
+        device_count = pynvml.nvmlDeviceGetCount()
+    except Exception:
+        device_count = 0
+
+    if device_count == 0:
+        print("No NVIDIA GPU detected via NVML. Will use CPU or --GPU argument if provided.")
+    else:
+        for gpu in range(device_count):
+            try:
+                handle = pynvml.nvmlDeviceGetHandleByIndex(gpu)
+                meminfo = pynvml.nvmlDeviceGetMemoryInfo(handle)
+                free_Gpu = meminfo.free / 1024 / 1024 / 1024
+                print("GPU:", gpu, " free_Gpu:", free_Gpu)
+                if free_Gpu > 20:
+                    flag = 1
+                    GPU = str(gpu)
+                    max_g = GPU
+                    break
+            except Exception as e:
+                # 跳过无效的索引/不可访问的 GPU
+                print(f"Skipping GPU index {gpu}: {e}")
+                continue
+
+    # 如果脚本未找到空闲 GPU，则使用命令行参数或默认 GPU 号
     if args.GPU != 10 and GPU == '10':
         GPU = str(args.GPU)
-    if torch.cuda.is_available():
-        device = torch.device('cuda:' + GPU if torch.cuda.is_available() else 'cpu')  #
+
+    if torch.cuda.is_available() and device_count > 0:
+        # 若 CUDA 可用且 NVML 探测到 GPU，则使用选择的 GPU
+        device = torch.device('cuda:' + GPU)
         print('on GPU ', GPU)
     else:
+        device = torch.device('cpu')
         print('on CPU')
 
 

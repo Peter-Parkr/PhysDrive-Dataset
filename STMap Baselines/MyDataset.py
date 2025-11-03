@@ -117,6 +117,43 @@ class Data_DG(Dataset):
 
             return gt, bvp, sp, rr, resp
 
+        elif self.dataName in ['On_Road_rPPG', 'On-Road-rPPG', 'On-Road-rPPG-Processed-Final']:
+            # 处理 On-Road-rPPG 数据集
+            bvp_name = 'Label/BVP.mat'
+            bvp_path = os.path.join(nowPath, bvp_name)
+            
+            if not os.path.exists(bvp_path):
+                # 如果 BVP.mat 不存在，尝试其他可能的命名
+                bvp_name = 'Label/BVP_Filt.mat'
+                bvp_path = os.path.join(nowPath, bvp_name)
+            
+            if os.path.exists(bvp_path):
+                bvp = scio.loadmat(bvp_path)['BVP']
+                bvp = np.array(bvp.astype('float32')).reshape(-1)
+                bvp = bvp[Step_Index:Step_Index + self.frames_num]
+                bvp = (bvp - np.min(bvp)) / (np.max(bvp) - np.min(bvp))
+                bvp = bvp.astype('float32')
+            else:
+                # 如果找不到 BVP 文件，创建一个默认值
+                print(f"Warning: BVP file not found at {bvp_path}")
+                bvp = np.zeros(self.frames_num, dtype=np.float32)
+            
+            # 尝试读取 HR
+            gt_name = 'Label/HR.mat'
+            gt_path = os.path.join(nowPath, gt_name)
+            
+            if os.path.exists(gt_path):
+                gt = scio.loadmat(gt_path)['HR']
+                gt = np.array(gt.astype('float32')).reshape(-1)
+                gt = np.nanmean(gt[Step_Index:Step_Index + self.frames_num])
+                gt = gt.astype('float32')
+            else:
+                # 如果没有 HR 文件，从 BVP 计算
+                gt = utils.hr_cal(bvp)
+                gt = np.array(gt).astype('float32')
+            
+            return gt, bvp
+
         elif self.dataName == 'PURE':
             bvp_name = 'Label/BVP.mat'
             bvp_path = os.path.join(nowPath, bvp_name)
@@ -156,8 +193,36 @@ class Data_DG(Dataset):
             gt = np.array(gt.astype('float32')).reshape(-1)
             gt = np.nanmean(gt[Step_Index:Step_Index + self.frames_num])
             gt = gt.astype('float32')
-
-        return gt, bvp
+            
+            return gt, bvp
+        
+        else:
+            # 默认处理方式，确保所有数据集都能返回值
+            print(f"Warning: Unknown dataName '{self.dataName}', using default label loading.")
+            bvp_name = 'Label/BVP.mat'
+            bvp_path = os.path.join(nowPath, bvp_name)
+            
+            if os.path.exists(bvp_path):
+                bvp = scio.loadmat(bvp_path)['BVP']
+                bvp = np.array(bvp.astype('float32')).reshape(-1)
+                bvp = bvp[Step_Index:Step_Index + self.frames_num]
+                bvp = (bvp - np.min(bvp)) / (np.max(bvp) - np.min(bvp))
+                bvp = bvp.astype('float32')
+            else:
+                bvp = np.zeros(self.frames_num, dtype=np.float32)
+            
+            gt_name = 'Label/HR.mat'
+            gt_path = os.path.join(nowPath, gt_name)
+            
+            if os.path.exists(gt_path):
+                gt = scio.loadmat(gt_path)['HR']
+                gt = np.array(gt.astype('float32')).reshape(-1)
+                gt = np.nanmean(gt[Step_Index:Step_Index + self.frames_num])
+                gt = gt.astype('float32')
+            else:
+                gt = np.float32(60.0)  # 默认心率值
+            
+            return gt, bvp
 
     def __getitem__(self, idx):
         img_name = 'STMap'
